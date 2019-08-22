@@ -46,9 +46,10 @@ class heliotrope extends eqLogic {
     }
 
     public function preUpdate() {
-        $geotrav = eqLogic::byId($this->getConfiguration('geoloc'));
-       if (!(is_object($geotrav) && $geotrav->getEqType_name() == 'geotrav')) {
-           throw new Exception(__('Vous devez sélectionner un équipement de localisation geotrav',__FILE__));
+        $latitude = $this->getConfiguration('latitude', '');
+        $longitude = $this->getConfiguration('longitude', '');
+        if (trim($latitude)==='' || trim($longitude)==='') {
+            throw new Exception(__('Vous devez saisair une latitude et une longitude',__FILE__));
            return;
        }
     }
@@ -281,14 +282,8 @@ class heliotrope extends eqLogic {
     }
 
     public function getInformations() {
-        $geotrav = eqLogic::byId($this->getConfiguration('geoloc'));
-        if (!(is_object($geotrav) && $geotrav->getEqType_name() == 'geotrav')) {
-            return;
-        }
-        $geolocval = geotravCmd::byEqLogicIdAndLogicalId($this->getConfiguration('geoloc'),'location:coordinate')->execCmd();
-        $geoloctab = explode(',', trim($geolocval));
-        $latitude = trim($geoloctab[0]);
-        $longitude = trim($geoloctab[1]);
+        $latitude = $this->getConfiguration('latitude', '');
+        $longitude = $this->getConfiguration('longitude', '');
         if (!$this->getConfiguration('zenith', '')) {
             $zenith = '90.58';
         } else {
@@ -356,15 +351,8 @@ class heliotrope extends eqLogic {
     }
 
     public function getDaily() {
-        $geotrav = eqLogic::byId($this->getConfiguration('geoloc'));
-        if (!(is_object($geotrav) && $geotrav->getEqType_name() == 'geotrav')) {
-            log::add('heliotrope', 'error', 'localisation invalide, veuillez sélectionner un équipement geotrav valide');
-            return;
-        }
-        $geolocval = geotravCmd::byEqLogicIdAndLogicalId($this->getConfiguration('geoloc'),'location:coordinate')->execCmd();
-        $geoloctab = explode(',', trim($geolocval));
-        $latitude = trim($geoloctab[0]);
-        $longitude = trim($geoloctab[1]);
+        $latitude = $this->getConfiguration('latitude', '');
+        $longitude = $this->getConfiguration('longitude', '');
         if (!$this->getConfiguration('zenith', '')) {
             $zenith = '90.58';
         } else {
@@ -426,20 +414,6 @@ class heliotrope extends eqLogic {
         $this->checkAndUpdateCmd('zenith',$zenith);
         $this->checkAndUpdateCmd('daylen',$daylen);
         $this->refreshWidget();
-    }
-
-    public function getGeoloc($_infos = '') {
-        $return = array();
-        foreach (eqLogic::byType('geoloc') as $geoloc) {
-            foreach (geolocCmd::byEqLogicId($geoloc->getId()) as $geoinfo) {
-                if ($geoinfo->getConfiguration('mode') == 'fixe' || $geoinfo->getConfiguration('mode') == 'dynamic') {
-                    $return[$geoinfo->getId()] = array(
-                        'value' => $geoinfo->getName(),
-                    );
-                }
-            }
-        }
-        return $return;
     }
 
     public function setupCron() {
